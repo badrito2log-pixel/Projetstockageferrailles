@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1f262c" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f262c" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" type="image/png" href="img/icone.png" />
+    <link rel="apple-touch-icon" href="img/icone.png" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Édition : stockage ferrailles, zone AT1 – flux amont</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-role="viewer">
+    <div class="modal" id="confirm" hidden role="dialog" aria-modal="true" aria-labelledby="cTitle">
+      <div class="mbox">
+        <h3 id="cTitle">Confirmer</h3>
+        <div id="cText" class="mtext"></div>
+        <div class="mbtns">
+          <button class="btn" id="cCancel" type="button">Annuler</button
+          ><button class="btn primary" id="cOk" type="button">Valider</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="bulk" hidden role="dialog" aria-modal="true" aria-labelledby="bTitle">
+      <div class="mbox wide">
+        <h3 id="bTitle">Modification en masse du plan de rangement</h3>
+        <ol class="steps">
+          <li>
+            <b>Téléchargez le modèle Excel</b>, pré-rempli avec toutes les références du portique et des cantilevers.<br /><button
+              class="btn"
+              id="bModel"
+              type="button"
+            >
+              Télécharger le modèle
+            </button>
+          </li>
+          <li>
+            <b>Remplissez-le</b> : nouvelle adresse (par exemple MIL-T2-004 ou POR-012, plusieurs adresses séparées par
+            des virgules), désignation, longueur, classe, barres, poids. Mettez SUPPRIMER dans la colonne Action pour
+            retirer une référence, ajoutez une ligne avec un nouveau code pour en créer une. Laissez une cellule vide
+            pour ne rien changer.
+          </li>
+          <li>
+            <b>Chargez le fichier rempli</b> (.xlsx ou .csv), ou collez les lignes copiées depuis Excel, titres
+            compris.<br />
+            <input type="file" id="bFile" accept=".xlsx,.xls,.csv" />
+            <textarea
+              id="bPaste"
+              rows="3"
+              placeholder="Collez ici les lignes copiées depuis Excel (avec la ligne de titres)"
+            ></textarea>
+            <button class="btn" id="bRead" type="button">Analyser</button>
+          </li>
+        </ol>
+        <div id="bReport" class="breport"></div>
+        <div class="mbtns">
+          <button class="btn" id="bClose" type="button">Fermer</button
+          ><button class="btn primary" id="bApply" type="button" disabled>Appliquer les modifications</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="mvModal" hidden role="dialog" aria-modal="true" aria-labelledby="mvTitle">
+      <div class="mbox">
+        <h3 id="mvTitle">Nouveau mouvement de stock</h3>
+        <div class="mform">
+          <label>Référence<select id="mvCode"></select></label>
+          <div class="mtypes" role="radiogroup" aria-label="Type de mouvement">
+            <label><input type="radio" name="mvType" value="E" /> Entrée</label
+            ><label><input type="radio" name="mvType" value="S" checked /> Sortie</label
+            ><label><input type="radio" name="mvType" value="A" /> Inventaire (stock compté)</label>
+          </div>
+          <label>Quantité (mètres)<input id="mvQty" inputmode="decimal" placeholder="Par exemple 120" /></label>
+          <label>Date<input id="mvDate" type="date" /></label>
+          <label>Commentaire<input id="mvNote" placeholder="Facultatif" /></label>
+          <div class="minfo" id="mvInfo"></div>
+          <div class="merr" id="mvErr" role="alert"></div>
+        </div>
+        <div class="mbtns">
+          <button class="btn" id="mvCancel" type="button">Annuler</button
+          ><button class="btn primary" id="mvSave" type="button">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="slModal" hidden role="dialog" aria-modal="true" aria-labelledby="slTitle">
+      <div class="mbox">
+        <h3 id="slTitle">Seuils de stock</h3>
+        <div class="mtext" id="slCode"></div>
+        <div class="mform grid4">
+          <label>Stock mini (m)<input id="sl_mini" inputmode="decimal" /></label
+          ><label>Stock de sécurité (m)<input id="sl_secu" inputmode="decimal" /></label
+          ><label>Seuil de réappro (m)<input id="sl_seuil" inputmode="decimal" /></label
+          ><label>Stock maxi (m)<input id="sl_maxi" inputmode="decimal" /></label>
+          <div class="merr" id="slErr" role="alert"></div>
+        </div>
+        <div class="mbtns">
+          <button class="btn" id="slCancel" type="button">Annuler</button
+          ><button class="btn primary" id="slSave" type="button">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+    <div class="shell">
+      <button class="sideToggle" id="sideToggle" type="button" aria-expanded="true" aria-controls="sidebar">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M15 6l-6 6 6 6" />
+        </svg>
+      </button>
+      <aside class="side" id="sidebar" aria-label="Filtres et réglages">
+        <div class="brand">
+          <img class="logo" src="img/logo-sncf-reseau.jpg" alt="SNCF Réseau" width="110" height="78" />
+          <h1>Stockage ferrailles</h1>
+          <div class="badges"><span class="badge zone">Zone AT1</span><span class="badge flux">Flux amont</span></div>
+        </div>
+        <div class="stripe" aria-hidden="true"></div>
+        <div class="actions">
+          <button class="export" id="exportBtn" type="button">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg
+            >Exporter le rapport
+          </button>
+        </div>
+        <p class="note" id="exportMsg" role="status" style="margin: -6px 0 0"></p>
+        <div class="role" id="roleBadge" role="status">
+          <span class="dot"></span><span id="roleTxt">Vérification des droits…</span>
+        </div>
+
+        <section class="grp" aria-label="Filtres">
+          <h2>Filtres</h2>
+          <div style="height: 10px"></div>
+          <div class="f search">
+            <label for="fS">Rechercher une référence</label
+            ><select id="fS"></select>
+          </div>
+          <div class="f">
+            <label for="fZone">Zone</label
+            ><select id="fZone">
+              <option value="">Toutes</option>
+              <option value="P">Sous le portique</option>
+              <option value="M">Cantilevers milieu</option>
+              <option value="E">Cantilevers Est</option>
+            </select>
+          </div>
+          <div class="f">
+            <label for="fK">Classe ABC</label
+            ><select id="fK">
+              <option value="">Toutes</option>
+              <option value="A">Classe A</option>
+              <option value="B">Classe B</option>
+              <option value="C">Classe C</option>
+              <option value="Sans historique">Sans historique</option>
+            </select>
+          </div>
+          <div class="f">
+            <label for="fL">Longueur</label
+            ><select id="fL">
+              <option value="">Toutes</option>
+              <option value="6">6 m</option>
+              <option value="12">12 m</option>
+              <option value="14">14 m</option>
+              <option value="15">15 m</option>
+            </select>
+          </div>
+          <div class="f">
+            <label for="fN">Niveau de cantilever</label
+            ><select id="fN">
+              <option value="">Tous</option>
+            </select>
+          </div>
+          <button class="btn" id="reset" type="button" style="width: 100%">Effacer les filtres</button>
+        </section>
+
+        <details class="grp sidecard" open>
+          <summary><h2>Éléments affichés</h2></summary>
+          <label class="chk"><input type="checkbox" data-layer="charges" checked />Fardeaux</label>
+          <label class="chk"><input type="checkbox" data-layer="roofs" checked />Toits</label>
+          <label class="chk"><input type="checkbox" data-layer="walls" checked />Murs, portes et fenêtres</label>
+          <label class="chk"><input type="checkbox" data-layer="cranes" checked />Portiques et ponts roulants</label>
+          <label class="chk"><input type="checkbox" data-layer="vehicles" checked />Véhicules</label>
+          <label class="chk"><input type="checkbox" data-layer="items" checked />Autres équipements</label>
+          <label class="chk"><input type="checkbox" data-layer="labels" checked />Étiquettes</label>
+          <label class="chk"><input type="checkbox" data-layer="cotes" checked />Cotes</label>
+          <label class="selrow"
+            >Couleur des fardeaux<select id="colorMode">
+              <option value="abc">Classe ABC</option>
+              <option value="stock">Statut du stock</option>
+            </select></label
+          >
+          <div class="racks" id="rackBtns"></div>
+          <p class="note" id="rackNote" hidden></p>
+        </details>
+
+        <details class="grp sidecard" open>
+          <summary><h2>Météo et heure</h2></summary>
+          <div class="wx" id="wx">
+            <button type="button" data-wx="soleil">Soleil</button
+            ><button type="button" data-wx="nuages">Soleil et nuages</button
+            ><button type="button" data-wx="couvert">Couvert</button
+            ><button type="button" data-wx="pluie">Pluie</button>
+          </div>
+          <div class="range">
+            <label for="hour">Heure</label
+            ><input id="hour" type="range" min="6" max="20" step="0.25" value="14" /><output id="hourOut"
+              >14 h 00</output
+            >
+          </div>
+        </details>
+
+        <details class="grp sidecard" open>
+          <summary><h2>Modifications</h2></summary>
+          <p class="note" style="margin-top: 0" id="movesNote"></p>
+          <ol class="moves" id="movesList"></ol>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button class="btn" id="copyMoves" type="button">Copier la liste</button
+            ><button class="btn" id="undoMoves" type="button">Revenir au plan du classeur</button>
+          </div>
+          <div id="pubBtns" style="gap: 8px; flex-wrap: wrap; margin-top: 8px">
+            <button
+              class="btn"
+              id="exportPlan"
+              type="button"
+              style="background: var(--steel); border-color: var(--steel); color: #fff"
+            >
+              Exporter plan.js pour publication</button
+            ><button class="btn" id="resetDraft" type="button">Revenir au plan publié</button>
+          </div>
+        </details>
+      </aside>
+
+      <div class="mainp">
+        <nav class="pagetabs" role="tablist" aria-label="Pages">
+          <button type="button" role="tab" id="tabMaq" aria-selected="true">Maquette et plan de rangement</button>
+          <button type="button" role="tab" id="tabStock" aria-selected="false">Gestion du stock</button>
+          <button type="button" role="tab" id="tabLog" aria-selected="false">Étiquettes</button>
+        </nav>
+        <section class="topbar" aria-label="Chiffres clés">
+          <div class="kpis" id="kpis"></div>
+          <div class="card">
+            <h2>Occupation des emplacements</h2>
+            <div class="donut" id="donut"></div>
+            <div class="bars" id="occBars" style="margin-top: 6px"></div>
+          </div>
+          <div class="card">
+            <h2 id="barsTitle">Références par classe</h2>
+            <div class="bars" id="bars"></div>
+          </div>
+        </section>
+
+        <main class="view">
+          <div class="stage" id="stage">
+            <canvas id="c3d" aria-label="Vue 3D de la zone de stockage"></canvas>
+            <div class="views" role="group" aria-label="Vues">
+              <button type="button" data-view="global" aria-pressed="true">3D vue globale</button>
+              <button type="button" data-view="walk" aria-pressed="false">3D vue marchant</button>
+              <span class="sep" aria-hidden="true"></span>
+              <button type="button" data-view="P" aria-pressed="false">Portique</button>
+              <button type="button" data-view="M" aria-pressed="false">Cantilevers milieu</button>
+              <button type="button" data-view="E" aria-pressed="false">Cantilevers Est</button>
+            </div>
+            <div class="scale" id="legend3d"></div>
+            <div class="banner" id="banner" role="status">
+              <span id="bannerTxt"></span><button type="button" id="bannerCancel">Annuler</button>
+            </div>
+            <div class="info" id="info" aria-live="polite"></div>
+            <div class="tip" id="tip"></div>
+            <div class="joy" id="joy" aria-hidden="true"><div class="knob" id="knob"></div></div>
+            <div class="hint" id="hint"></div>
+          </div>
+        </main>
+
+        <section class="plan" id="plan" aria-label="Plan de rangement">
+          <div class="bar">
+            <h2>
+              <span class="hico" aria-hidden="true"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M9 6h12M9 12h12M9 18h12" />
+                  <path d="M4 6h.01M4 12h.01M4 18h.01" /></svg></span
+              >Plan de rangement
+            </h2>
+            <span class="msg" id="planMsg" role="status"></span>
+            <select id="planSearch" aria-label="Référence"></select>
+            <button class="btn primary" id="addOpen" type="button">Ajouter une référence</button>
+            <button class="btn" id="bulkOpen" type="button">Modification en masse</button>
+            <button class="btn" id="copyTable" type="button">Copier le tableau</button>
+          </div>
+          <div class="addform" id="addForm">
+            <div class="f"><label for="aCode">Code</label><input id="aCode" placeholder="71020999" /></div>
+            <div class="f" style="flex: 2; min-width: 200px">
+              <label for="aDes">Désignation</label><input id="aDes" placeholder="PLAT-ACIER-50X5-6M" />
+            </div>
+            <div class="f">
+              <label for="aLen">Longueur</label
+              ><select id="aLen">
+                <option value="6">6 m</option>
+                <option value="12">12 m</option>
+                <option value="14">14 m</option>
+                <option value="15">15 m</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="aK">Classe</label
+              ><select id="aK">
+                <option>A</option>
+                <option>B</option>
+                <option selected>C</option>
+                <option>Sans historique</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="aBars">Nombre de barres</label><input id="aBars" type="number" min="0" value="20" />
+            </div>
+            <div class="f">
+              <label for="aW">Poids total (kg)</label><input id="aW" type="number" min="0" value="500" />
+            </div>
+            <div class="f">
+              <label for="aN">Emplacements</label
+              ><select id="aN">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="aSlot">Adresse</label
+              ><select id="aSlot"></select>
+            </div>
+            <button class="btn primary" id="addSave" type="button">Ajouter</button>
+            <button class="btn" id="addCancel" type="button">Annuler</button>
+          </div>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Désignation</th>
+                  <th>Longueur</th>
+                  <th>Classe</th>
+                  <th>Zone</th>
+                  <th id="thAddr">Adresse</th>
+                  <th class="num">Barres</th>
+                  <th class="num">Poids (kg)</th>
+                  <th class="num">Charge par empl. (kg)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="planBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="stockpage" id="stockPage" aria-label="Gestion du stock">
+          <div class="kpis skpis" id="skpis"></div>
+          <section class="plan scard terrain">
+            <div class="bar">
+              <h2>
+                <span class="hico" aria-hidden="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="6" y="2" width="12" height="20" rx="2" />
+                    <path d="M11 18h2" /></svg></span
+                >Mode terrain
+              </h2>
+            </div>
+            <div class="tbody">
+              <select id="tSelect" class="tselect" aria-label="Choisir une référence"></select>
+              <div class="tcard" id="tCard">
+                <p class="tempty">
+                  Choisissez une référence dans la liste, ou scannez l’étiquette d’un emplacement avec l’appareil photo
+                  du téléphone.
+                </p>
+              </div>
+            </div>
+          </section>
+          <div class="lgrid">
+            <section class="plan scard">
+              <div class="bar">
+                <h2>
+                  <span class="hico" aria-hidden="true"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="5" y="4" width="14" height="18" rx="2" />
+                      <path d="M9 2h6v4H9z" />
+                      <path d="m9 14 2 2 4-4" /></svg></span
+                  >Inventaire tournant
+                </h2>
+              </div>
+              <div class="scroll small"><table id="invTbl"></table></div>
+            </section>
+            <section class="plan scard">
+              <div class="bar">
+                <h2>
+                  <span class="hico" aria-hidden="true"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m8 3-4 4 4 4" />
+                      <path d="M4 7h16" />
+                      <path d="m16 13 4 4-4 4" />
+                      <path d="M20 17H4" /></svg></span
+                  >Derniers mouvements
+                </h2>
+              </div>
+              <div class="scroll small"><table id="mvTbl"></table></div>
+            </section>
+          </div>
+          <section class="plan scard">
+            <div class="bar">
+              <h2>
+                <span class="hico" aria-hidden="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
+                    <path d="m3 8 9 5 9-5" />
+                    <path d="M12 13v8" /></svg></span
+                >Stock par référence
+              </h2>
+              <span class="msg" id="stockMsg"></span>
+              <select id="stSearch" aria-label="Référence"></select>
+              <select id="stStatus" aria-label="Statut">
+                <option value="">Tous les statuts</option>
+                <option value="R">Rupture</option>
+                <option value="C">Critique</option>
+                <option value="O">Sous le seuil</option>
+                <option value="N">Normal</option>
+                <option value="S">Surstock</option>
+              </select>
+              <select id="stZone" aria-label="Zone">
+                <option value="">Toutes les zones</option>
+                <option value="P">Portique</option>
+                <option value="M">Cantilevers milieu</option>
+                <option value="E">Cantilevers Est</option>
+              </select>
+              <button class="btn" id="stExport" type="button">Exporter (Excel)</button>
+              <button class="btn primary" id="mvNew" type="button">Nouveau mouvement</button>
+            </div>
+            <div class="scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Désignation</th>
+                    <th>Adresse</th>
+                    <th>Statut</th>
+                    <th>Stock (m)</th>
+                    <th>Niveau</th>
+                    <th>Mini</th>
+                    <th>Sécurité</th>
+                    <th>Seuil</th>
+                    <th>Maxi</th>
+                    <th>Couverture</th>
+                    <th>Valeur</th>
+                    <th id="stActTh">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="stBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="logpage" id="logPage" aria-label="Étiquettes">
+          <div class="etqgrid">
+            <div class="etqtop">
+              <section class="plan scard etq">
+                <div class="bar">
+                  <h2>
+                    <span class="hico" aria-hidden="true"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+                        <circle cx="12" cy="10" r="2.5" /></svg></span
+                    >Emplacements
+                  </h2>
+                </div>
+                <div class="etqbody">
+                  <div class="etqzones" id="etqZones">
+                    <button type="button" data-z="">Tous</button><button type="button" data-z="P">Portique</button
+                    ><button type="button" data-z="M">Milieu</button><button type="button" data-z="E">Est</button>
+                  </div>
+                  <div class="etqnav">
+                    <button type="button" class="btnnav" id="etqFirst" aria-label="Premier">⏮</button
+                    ><button type="button" class="btnnav" id="etqPrev" aria-label="Précédent">◀</button>
+                    <div class="etqcount">
+                      <input id="etqPos" inputmode="numeric" aria-label="Numéro" /> / <span id="etqTot">0</span>
+                    </div>
+                    <button type="button" class="btnnav" id="etqNext" aria-label="Suivant">▶</button
+                    ><button type="button" class="btnnav" id="etqLast" aria-label="Dernier">⏭</button>
+                  </div>
+                  <label class="etqgo">Aller à<select id="etqAdr"></select></label>
+                </div>
+              </section>
+              <section class="plan scard etq">
+                <div class="bar">
+                  <h2>
+                    <span class="hico" aria-hidden="true"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" />
+                        <circle cx="7.5" cy="7.5" r="1.5" /></svg></span
+                    >Barre d’info étiquette
+                  </h2>
+                </div>
+                <div class="etqbody">
+                  <label class="etqgo">Texte de l’étiquette<input id="etqTexte" /></label>
+                </div>
+              </section>
+            </div>
+            <section class="plan scard etq etqpreview">
+              <div class="bar">
+                <h2>
+                  <span class="hico" aria-hidden="true"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                      <circle cx="12" cy="12" r="3" /></svg></span
+                  >Aperçu étiquette
+                </h2>
+                <div class="etqzoom">
+                  <button type="button" class="btnnav" id="etqZoomMoins">−</button><span id="etqZoomTxt">100%</span
+                  ><button type="button" class="btnnav" id="etqZoomPlus">+</button
+                  ><button type="button" class="btnnav" id="etqZoomReset" aria-label="Réinitialiser le zoom">⟲</button>
+                </div>
+              </div>
+              <div class="etqcanvas"><canvas id="etqCanvas"></canvas></div>
+            </section>
+            <div class="etqactions">
+              <button class="btn" id="etqUne" type="button">Générer un JPG</button
+              ><button class="btn primary" id="etqTout" type="button">Générer en masse</button>
+            </div>
+            <div class="etqprog" id="etqProg" hidden>
+              <div class="etqbar"><div id="etqProgBar"></div></div>
+              <span id="etqProgTxt">0 / 0</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Bibliothèques -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Mode de la page (version GitHub) -->
+    <script>
+      window.AT1_MODE = "edition";
+    </script>
+    <!-- Données -->
+    <script src="js/donnees/references.js"></script>
+    <script src="js/donnees/site.js"></script>
+    <script src="js/donnees/stock-initial.js"></script>
+    <script src="js/donnees/vehicules-3d.js"></script>
+    <script src="js/donnees/polices-pdf.js"></script>
+    <script src="js/donnees/logo-pdf.js"></script>
+    <script src="plan.js?v=1"></script>
+    <!-- Application -->
+    <script src="js/app.js"></script>
+  </body>
+</html>
