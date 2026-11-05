@@ -2532,3 +2532,23 @@ td.n {
     justify-content: flex-start;
   }
 }
+/* ---------- tableaux : titres de colonnes et données centrés de la même façon ---------- */
+.plan table th,
+.plan table td,
+.breport th,
+.breport td {
+  text-align: center !important;
+  vertical-align: middle;
+}
+.plan table td .addr,
+.plan table td.act {
+  text-align: center !important;
+}
+.plan table td.act button,
+.plan table td .addr {
+  margin: 2px;
+}
+#planBody td:nth-child(4),
+#planBody td:nth-child(3) {
+  white-space: nowrap;
+}
