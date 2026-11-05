@@ -1326,7 +1326,7 @@ function makeLabels() {
   label("zone camion et voie ferrée + 1 m de sécurité", POR.x0 + POR.w + 3.6, 0.9, (POR.bandS + POR.bandN) / 2, 0.6);
   label("zone verte à laisser libre", POR.x0 + POR.w / 2, 0.6, POR.zs + 1.1, 0.6);
 
-  label("Sol à refaire (environ 2 040 m²)", 76, 0.7, -15.8, 0.9);
+  label("Sol à refaire (2 040 m²)", 76, 0.7, -15.8, 0.9);
 }
 
 /* ---------- Filtres et indicateurs ---------- */
