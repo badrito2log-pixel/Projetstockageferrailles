@@ -288,7 +288,20 @@
 
         <section class="plan" id="plan" aria-label="Plan de rangement">
           <div class="bar">
-            <h2>Plan de rangement</h2>
+            <h2>
+              <span class="hico" aria-hidden="true"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M9 6h12M9 12h12M9 18h12" />
+                  <path d="M4 6h.01M4 12h.01M4 18h.01" /></svg></span
+              >Plan de rangement
+            </h2>
             <span class="msg" id="planMsg" role="status"></span>
             <select id="planSearch" aria-label="Référence"></select>
             <button class="btn primary" id="addOpen" type="button">Ajouter une référence</button>
@@ -364,7 +377,22 @@
         <section class="stockpage" id="stockPage" aria-label="Gestion du stock">
           <div class="kpis skpis" id="skpis"></div>
           <section class="plan scard terrain">
-            <div class="bar"><h2>Mode terrain</h2></div>
+            <div class="bar">
+              <h2>
+                <span class="hico" aria-hidden="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="6" y="2" width="12" height="20" rx="2" />
+                    <path d="M11 18h2" /></svg></span
+                >Mode terrain
+              </h2>
+            </div>
             <div class="tbody">
               <select id="tSelect" class="tselect" aria-label="Choisir une référence"></select>
               <div class="tcard" id="tCard">
@@ -377,17 +405,64 @@
           </section>
           <div class="lgrid">
             <section class="plan scard">
-              <div class="bar"><h2>Inventaire tournant</h2></div>
+              <div class="bar">
+                <h2>
+                  <span class="hico" aria-hidden="true"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="5" y="4" width="14" height="18" rx="2" />
+                      <path d="M9 2h6v4H9z" />
+                      <path d="m9 14 2 2 4-4" /></svg></span
+                  >Inventaire tournant
+                </h2>
+              </div>
               <div class="scroll small"><table id="invTbl"></table></div>
             </section>
             <section class="plan scard">
-              <div class="bar"><h2>Derniers mouvements</h2></div>
+              <div class="bar">
+                <h2>
+                  <span class="hico" aria-hidden="true"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m8 3-4 4 4 4" />
+                      <path d="M4 7h16" />
+                      <path d="m16 13 4 4-4 4" />
+                      <path d="M20 17H4" /></svg></span
+                  >Derniers mouvements
+                </h2>
+              </div>
               <div class="scroll small"><table id="mvTbl"></table></div>
             </section>
           </div>
           <section class="plan scard">
             <div class="bar">
-              <h2>Stock par référence</h2>
+              <h2>
+                <span class="hico" aria-hidden="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
+                    <path d="m3 8 9 5 9-5" />
+                    <path d="M12 13v8" /></svg></span
+                >Stock par référence
+              </h2>
               <span class="msg" id="stockMsg"></span>
               <select id="stSearch" aria-label="Référence"></select>
               <select id="stStatus" aria-label="Statut">
@@ -436,7 +511,22 @@
           <div class="etqgrid">
             <div class="etqtop">
               <section class="plan scard etq">
-                <div class="bar"><h2>Emplacements</h2></div>
+                <div class="bar">
+                  <h2>
+                    <span class="hico" aria-hidden="true"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
+                        <circle cx="12" cy="10" r="2.5" /></svg></span
+                    >Emplacements
+                  </h2>
+                </div>
                 <div class="etqbody">
                   <div class="etqzones" id="etqZones">
                     <button type="button" data-z="">Tous</button><button type="button" data-z="P">Portique</button
@@ -455,7 +545,22 @@
                 </div>
               </section>
               <section class="plan scard etq">
-                <div class="bar"><h2>Barre d’info étiquette</h2></div>
+                <div class="bar">
+                  <h2>
+                    <span class="hico" aria-hidden="true"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z" />
+                        <circle cx="7.5" cy="7.5" r="1.5" /></svg></span
+                    >Barre d’info étiquette
+                  </h2>
+                </div>
                 <div class="etqbody">
                   <label class="etqgo">Texte de l’étiquette<input id="etqTexte" /></label>
                 </div>
@@ -463,7 +568,20 @@
             </div>
             <section class="plan scard etq etqpreview">
               <div class="bar">
-                <h2>Aperçu étiquette</h2>
+                <h2>
+                  <span class="hico" aria-hidden="true"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                      <circle cx="12" cy="12" r="3" /></svg></span
+                  >Aperçu étiquette
+                </h2>
                 <div class="etqzoom">
                   <button type="button" class="btnnav" id="etqZoomMoins">−</button><span id="etqZoomTxt">100%</span
                   ><button type="button" class="btnnav" id="etqZoomPlus">+</button
